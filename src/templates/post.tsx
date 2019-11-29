@@ -1,29 +1,16 @@
 import React from 'react';
 import Markdown from 'react-markdown';
-import { graphql, useStaticQuery } from 'gatsby';
+import { graphql } from 'gatsby';
 
 import styles from '../styles/post.module.css';
 import { GetPostsQuery } from '../graphql/types';
 
-const GET_POSTS_QUERY = graphql`
-  query getPosts($slug: String!) {
-    gcms {
-      posts(where: { slug: $slug }) {
-        id
-        slug
-        title
-        coverImage {
-          handle
-        }
-        content
-      }
-    }
-  }
-`;
+interface PostProps {
+  data: GetPostsQuery;
+}
 
-const Post = () => {
-  const { gcms } = useStaticQuery<GetPostsQuery>(GET_POSTS_QUERY);
-  const post = gcms.posts[0];
+const Post: React.SFC<PostProps> = ({ data }) => {
+  const post = data.graphCMS.posts[0];
   return (
     <article>
       <h1>{post.title}</h1>
@@ -37,5 +24,21 @@ const Post = () => {
     </article>
   );
 };
+
+export const query = graphql`
+  query getPosts($slug: String!) {
+    graphCMS {
+      posts(where: { slug: $slug }) {
+        id
+        slug
+        title
+        coverImage {
+          handle
+        }
+        content
+      }
+    }
+  }
+`;
 
 export default Post;

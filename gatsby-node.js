@@ -1,42 +1,45 @@
 const path = require('path');
 
-exports.createPages = ({ graphql, actions }) => {
+exports.createPages = async ({ graphql, actions }) => {
   const { createPage } = actions;
-  return new Promise(resolve => {
-    const postTemplate = path.resolve(`src/templates/post.tsx`);
+  const postTemplate = path.resolve(`src/templates/post.tsx`);
 
-    graphql(`
-      {
-        gcms {
-          allPosts: postsConnection {
-            edges {
-              node {
-                id
-                title
-                slug
-                coverImage {
-                  handle
-                }
-                content
+  // query all pages
+  const { data, errors } = graphql(`
+    {
+      graphCMS {
+        allPosts: postsConnection {
+          edges {
+            node {
+              id
+              title
+              slug
+              coverImage {
+                handle
               }
+              content
             }
           }
         }
       }
-    `).then(result => {
-      if (result.errors) {
-        console.log(result.errors);
-      }
-      result.data.gcms.allPosts.edges.map(({ node }) => {
-        createPage({
-          path: `/post/${node.slug}`,
-          component: postTemplate,
-          context: {
-            slug: node.slug,
-          },
-        });
-      });
-      resolve();
+    }
+  `);
+
+  // abort when errors
+  if (errors) {
+    console.log(errors);
+    return;
+  }
+
+  // create gatsby pages
+  data.graphCMS.allPosts.edges.map(({ node }) => {
+    createPage({
+      path: `/post/${node.slug}`,
+      component: postTemplate,
+      // the context is passed to the template query
+      context: {
+        slug: node.slug,
+      },
     });
   });
 };
